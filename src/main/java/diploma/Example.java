@@ -1,6 +1,7 @@
 package diploma;
 
 
+import diploma.model.Fingerprint;
 import diploma.preprocessing.FrequencyFiled;
 import diploma.preprocessing.GaborFilter;
 import diploma.preprocessing.OrientationField;
@@ -13,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
+import java.awt.*;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,10 +39,14 @@ public class Example {
 
 	public static void main(String[] args) {
 
-		ImagePlus imagePlus = new ImagePlus("C:\\Users\\nagrizolich\\Desktop\\DB2_B\\108_2.tif");
-		OrientationField orientationField = new OrientationField(imagePlus);
-		double[][] smoothedField = orientationField.calculate(17).smoothField(1).getLeft();
-		Pair<Double,Double> corePoint = OrientationField.getCorePoint(smoothedField);
-		System.out.println((2 + corePoint.getLeft())*17 + " " + (2 + corePoint.getRight())*17);
+		ImagePlus imagePlus = new ImagePlus("C:\\Users\\nagrizolich\\Desktop\\DB2_B\\107_2.tif");
+		double[][] pixels = transpose(toDouble(imagePlus.getProcessor().getFloatArray()));
+		OrientationField orientationField = new OrientationField(pixels).calculate(17);
+//		double[][] smoothedField = orientationField.calculate(17).smoothField(1).getLeft();
+//		System.out.println((int) (orientationField.getOrientationField()[5][3]*180/Math.PI));
+		System.out.println(orientationField.getOrientationField()[17][10]*180/Math.PI);
+		System.out.println(FrequencyFiled.getPeriod(pixels, 297,178,31,31, orientationField.getOrientationField()[17][10]));
+//		Pair<Double,Double> corePoint = OrientationField.getCorePoint(smoothedField);
+//		System.out.println(Fingerprint.getStartROIBlock(corePoint));
 	}
 }

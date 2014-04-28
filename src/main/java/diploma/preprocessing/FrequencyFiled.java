@@ -4,8 +4,6 @@ import com.google.common.collect.Range;
 import diploma.CommonUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
-import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
 import java.util.*;
 
@@ -13,6 +11,13 @@ import static java.lang.Math.*;
 
 public class FrequencyFiled {
 
+	/**
+	 * Calculates distance to line with given angle of slope from specified point
+	 * @param i		x coordinate of point
+	 * @param j		y coordinate of point
+	 * @param theta	angle of line slope
+	 * @return		distance
+	 */
 	private static double distance(double i,double j, double theta) {
 
 		if (abs(PI/2 - theta) < 1e-4) {
@@ -22,6 +27,13 @@ public class FrequencyFiled {
 		return (i*tan(theta) - j)/norm;
 	}
 
+	/**
+	 * Find pixels through which line with given angle should have passed
+	 * Assumed that line passes through (0,0) point of coordinate space
+	 * @param theta	angle between line and X axis
+	 * @param n		length of line
+	 * @return		line points in 2d pixel space with corresponding order numbers as Map keys
+	 */
 	public static Map<Integer,Pair<Integer,Integer>> getPixelAxis(double theta, int n) {
 
 		if (n % 2 == 0) {
@@ -62,23 +74,30 @@ public class FrequencyFiled {
 		return result;
 	}
 
+	/**
+	 * Find signature of image block with given parameters
+	 */
 	public static List<Double> getSignature(double[][] image, int row, int column, int xSize, int ySize, double theta) {
 
-		Map<Integer,Pair<Integer,Integer>> xAxis = getPixelAxis(theta, xSize);
-		Map<Integer,Pair<Integer,Integer>> yAxis = getPixelAxis(theta + PI/2, ySize);
+		Map<Integer,Pair<Integer,Integer>> xAxis = getPixelAxis(theta + PI/2, xSize);
+		Map<Integer,Pair<Integer,Integer>> yAxis = getPixelAxis(theta, ySize);
 		List<Double> signature = new ArrayList<>();
 		Range<Integer> rowsRange = Range.closed(0, image.length - 1);
 		Range<Integer> columnsRange = Range.closed(0, image[0].length - 1);
 
+		System.out.println(xAxis);
+
 		for (int i = -(xSize -1)/2; i <= (xSize - 1)/2; i++) {
 
 			double value = 0;
-			Pair<Integer,Integer> currentCenter = new ImmutablePair<>(xAxis.get(i).getLeft() + row,
-					xAxis.get(i).getRight() + column);
+			Pair<Integer,Integer> currentCenter = new ImmutablePair<>(xAxis.get(i).getRight() + row,
+					xAxis.get(i).getLeft() + column);
+
+			System.out.println(currentCenter);
 
 			for (Pair<Integer,Integer> pair : yAxis.values()) {
-				int rowCor = currentCenter.getLeft() + pair.getLeft();
-				int colCor = currentCenter.getRight() + pair.getRight();
+				int rowCor = currentCenter.getLeft() + pair.getRight();
+				int colCor = currentCenter.getRight() + pair.getLeft();
 				if (!(rowsRange.contains(rowCor) && columnsRange.contains(colCor))) {
 					value = 0;
 					break;
@@ -93,45 +112,77 @@ public class FrequencyFiled {
 		return signature;
 	}
 
+	/**
+	 * Estimates ridges period in the block with given parameters
+	 * @param image		array of pixels of the source image
+	 * @param row		block center row
+	 * @param column	block center column
+	 * @param xSize		block length along X axis (signature length)
+	 * @param ySize		block length along Y axis
+	 * @param theta		angle block rotation
+	 * @return			ridges period
+	 */
 	public static double getPeriod(double[][] image, int row, int column, int xSize, int ySize, double theta) {
 
 		List<Double> signature = getSignature(image, row, column, xSize, ySize, theta);
-		double[] x = new double[xSize];
-		for (int i = 0; i < x.length; i++) {
-			x[i] = i + 1;
-		}
-		PolynomialSplineFunction function = new SplineInterpolator().interpolate(x, CommonUtils.toArray(signature));
-		List<Double> interpolatedValues = new ArrayList<>();
 
-		double value = 1;
-		while (value <= x.length) {
-			interpolatedValues.add(function.value(value));
-			value += 0.1;
+		System.out.println(signature);
+
+		for (int i = 0; i < 4; i++) {
+			signature = smooth(signature, 5);
 		}
-		return getAvgPeakDistance(findPeaks(CommonUtils.toArray(interpolatedValues)))/10;
+
+		return getMaxPeakDistance(findPeaks(CommonUtils.toArray(signature)));
 	}
 
+	/**
+	 * Smooths data using moving average
+	 * @param data 			given data
+	 * @param windowSize 	averaging window size
+	 * @return	smoothed data
+	 */
+	public static List<Double> smooth(List<Double> data, int windowSize) {
 
-	private static double getAvgPeakDistance(List<Pair<Double,Integer>> peaks) {
-
-		List<Double> p = new LinkedList<>();
-		for (Pair<Double,Integer> pair : peaks) {
-			p.add(pair.getLeft());
+		if (windowSize % 2 == 0) {
+			throw new IllegalArgumentException("Smoothing window size must be odd");
 		}
 
-		double mean = (Collections.max(p) + Collections.min(p))/2;
-		List<Pair<Double,Integer>> truePeaks = new ArrayList<>();
-		for (Pair<Double,Integer> pair : peaks) {
-			if (pair.getLeft() > mean) {
-				truePeaks.add(pair);
+		int halfWindowSize = (windowSize - 1)/2;
+
+		List<Double> smoothed = new ArrayList<>(data.size());
+		for (int i = 0; i < data.size(); i++) {
+
+			double windowSum = data.get(i);
+			int elementsSummed = 1;
+			for (int k = 1; k <= halfWindowSize; k++) {
+
+				if ((i - k >= 0) && (i + k < data.size())) {
+					windowSum += data.get(i - k);
+					windowSum += data.get(i + k);
+					elementsSummed += 2;
+				}
+			}
+			smoothed.add(windowSum/elementsSummed);
+		}
+		return smoothed;
+	}
+
+	private static double getMaxPeakDistance(List<Pair<Double,Integer>> peaks) {
+
+		System.out.println(peaks);
+
+		if (peaks.size() < 2) {
+			System.out.println("Not enough peaks");
+			return 100;
+		}
+
+		int max = peaks.get(1).getRight() - peaks.get(0).getRight();
+		for (int i = 1; i < peaks.size() - 1; i++) {
+			if (peaks.get(i + 1).getRight() - peaks.get(i).getRight() > max) {
+				max = peaks.get(i + 1).getRight() - peaks.get(i).getRight();
 			}
 		}
-
-		double avgDist = 0;
-		for (int i = 0; i < truePeaks.size() - 1; i++) {
-			avgDist += truePeaks.get(i + 1).getRight() - truePeaks.get(i).getRight();
-		}
-		return avgDist/(truePeaks.size() - 1);
+		return max;
 	}
 
 	private static List<Pair<Double,Integer>> findPeaks(double[] array) {

@@ -19,9 +19,7 @@ public class OrientationField {
 	 * First ImageProcessor in result List is Gx, second - Gy
 	 * @return gradients
 	 */
-	public static List<double[][]> sobelGradient(ImageProcessor imageProcessor) {
-
-		double[][] pixels = transpose(toDouble(imageProcessor.getFloatArray()));
+	public static List<double[][]> sobelGradient(double[][] pixels) {
 
 		double[][] Gy = Convolution.convolve(pixels, new double[][]{{-1, -2, -1},
 																	{ 0,  0,  0},
@@ -186,25 +184,23 @@ public class OrientationField {
 		return index;
 	}
 
-	private ImageProcessor imageProcessor;
-	private ImagePlus imagePlus;
+	private double[][] pixels;
 	private double[][] orientationField;
 	private double[][] coherences;
 
-	public OrientationField(ImagePlus imagePlus) {
-		this.imageProcessor = imagePlus.getProcessor();
-		this.imagePlus = imagePlus;
+	public OrientationField(double[][] pixels) {
+		this.pixels = pixels;
 	}
 
 	public OrientationField calculate(int segmentSize) {
+
 		if (segmentSize % 2 != 1) {
 			throw new IllegalArgumentException("Segment size should be odd");
 		}
 
-		List<double[][]> gradients = sobelGradient(imageProcessor);
+		List<double[][]> gradients = sobelGradient(pixels);
 		SegmentedImage Gx = new SegmentedImage(segmentSize, gradients.get(0));
 		SegmentedImage Gy = new SegmentedImage(segmentSize, gradients.get(1));
-		printSignalToFile(Gx.getImagePixels(), "Gx.txt");
 
 		orientationField = new double[Gx.getSegmentsInRow()][Gx.getSegmentsInColumn()];
 		coherences = new double[Gx.getSegmentsInRow()][Gx.getSegmentsInColumn()];
