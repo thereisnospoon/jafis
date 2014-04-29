@@ -1,16 +1,11 @@
 package diploma.preprocessing;
 
-import static diploma.CommonUtils.*;
-import static java.lang.Math.*;
-import static java.lang.Math.abs;
-import static java.lang.Math.min;
-
-import ij.ImagePlus;
-import ij.process.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+
+import static java.lang.Math.*;
 
 public class OrientationField {
 

@@ -1,7 +1,6 @@
 package diploma.preprocessing;
 
 import ij.ImagePlus;
-import ij.process.ImageProcessor;
 
 import static java.lang.Math.*;
 

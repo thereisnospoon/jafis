@@ -34,7 +34,7 @@ public class FrequencyFiled {
 	 * @param n		length of line
 	 * @return		line points in 2d pixel space with corresponding order numbers as Map keys
 	 */
-	public static Map<Integer,Pair<Integer,Integer>> getPixelAxis(double theta, int n) {
+	private static Map<Integer,Pair<Integer,Integer>> getPixelAxis(double theta, int n) {
 
 		if (n % 2 == 0) {
 			throw new IllegalArgumentException("n should be odd");
@@ -77,7 +77,7 @@ public class FrequencyFiled {
 	/**
 	 * Find signature of image block with given parameters
 	 */
-	public static List<Double> getSignature(double[][] image, int row, int column, int xSize, int ySize, double theta) {
+	private static List<Double> getSignature(double[][] image, int row, int column, int xSize, int ySize, double theta) {
 
 		Map<Integer,Pair<Integer,Integer>> xAxis = getPixelAxis(theta + PI/2, xSize);
 		Map<Integer,Pair<Integer,Integer>> yAxis = getPixelAxis(theta, ySize);
@@ -85,15 +85,11 @@ public class FrequencyFiled {
 		Range<Integer> rowsRange = Range.closed(0, image.length - 1);
 		Range<Integer> columnsRange = Range.closed(0, image[0].length - 1);
 
-		System.out.println(xAxis);
-
 		for (int i = -(xSize -1)/2; i <= (xSize - 1)/2; i++) {
 
 			double value = 0;
 			Pair<Integer,Integer> currentCenter = new ImmutablePair<>(xAxis.get(i).getRight() + row,
 					xAxis.get(i).getLeft() + column);
-
-			System.out.println(currentCenter);
 
 			for (Pair<Integer,Integer> pair : yAxis.values()) {
 				int rowCor = currentCenter.getLeft() + pair.getRight();
@@ -125,10 +121,7 @@ public class FrequencyFiled {
 	public static double getPeriod(double[][] image, int row, int column, int xSize, int ySize, double theta) {
 
 		List<Double> signature = getSignature(image, row, column, xSize, ySize, theta);
-
-		System.out.println(signature);
-
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 1; i++) {
 			signature = smooth(signature, 5);
 		}
 
@@ -168,12 +161,9 @@ public class FrequencyFiled {
 	}
 
 	private static double getMaxPeakDistance(List<Pair<Double,Integer>> peaks) {
-
-		System.out.println(peaks);
-
 		if (peaks.size() < 2) {
 			System.out.println("Not enough peaks");
-			return 100;
+			return 10;
 		}
 
 		int max = peaks.get(1).getRight() - peaks.get(0).getRight();
