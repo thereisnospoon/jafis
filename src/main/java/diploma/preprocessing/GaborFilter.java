@@ -77,7 +77,7 @@ public class GaborFilter {
 	/**
 	 * Gabor function
 	 */
-	public double G(double i, double j) {
+	private double G(double i, double j) {
 
 		double B = 1./2/pow(sigma, 2);
 		double a = B/PI;

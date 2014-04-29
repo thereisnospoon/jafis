@@ -1,8 +1,7 @@
 package diploma.model;
 
 import diploma.CommonUtils;
-import diploma.preprocessing.FrequencyFiled;
-import diploma.preprocessing.OrientationField;
+import diploma.preprocessing.*;
 import ij.ImagePlus;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -41,9 +40,35 @@ public class Fingerprint {
 		Map<Pair<Integer,Integer>,Double> roiFrequencies = calculateROIFrequencies(fingerprint.pixels,
 				mergeFields(orientationField.getOrientationField(), smoothedField.getLeft()), fingerprint.startROIBlock);
 
-		System.out.println(roiFrequencies);
 
 		return fingerprint;
+	}
+
+
+	//TODO: Implement
+	private static double[][] getGaborFilteredROI(double[][] pixels, double[][] orientationField,
+												  Map<Pair<Integer,Integer>,Double> frequencies) {
+
+		double[][] filteredROI = new double[PROCESSING_BLOCK_SIZE*SIZE_OF_ROI][PROCESSING_BLOCK_SIZE*SIZE_OF_ROI];
+
+		SegmentedImage segmentedImage = new SegmentedImage(PROCESSING_BLOCK_SIZE, pixels);
+		for (Pair<Integer,Integer> block : frequencies.keySet()) {
+
+			int blockRow = block.getLeft();
+			int blockColumn = block.getRight();
+			GaborFilter gaborFilter = new GaborFilter(frequencies.get(block), orientationField[blockRow][blockColumn], 0, 0.5, 2);
+
+			double[][] filteredBlockPixels = Convolution.convolve(segmentedImage.getSegment(blockRow,blockColumn).getPixels(),
+					gaborFilter.getKernel());
+
+			for (int i = 0; i < PROCESSING_BLOCK_SIZE; i++) {
+				for (int j = 0; j < PROCESSING_BLOCK_SIZE; j++) {
+//					filteredROI[PROCESSING_BLOCK_SIZE*i][j] =
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/**

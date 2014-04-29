@@ -12,6 +12,10 @@ public class SegmentedImage {
 			this.pixels = pixels;
 		}
 
+		public double[][] getPixels() {
+			return pixels;
+		}
+
 		@Override
 		public String toString() {
 
