@@ -2,21 +2,25 @@ package diploma.model;
 
 import diploma.CommonUtils;
 import diploma.preprocessing.*;
+import diploma.wavelets.Wavelet;
+import diploma.wavelets.Wavelet.Subband;
 import ij.ImagePlus;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.stat.descriptive.moment.Variance;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Fingerprint {
+public class Fingerprint implements Serializable {
 
 	public static final int PROCESSING_BLOCK_SIZE = 17;
 	public static final int SMOOTHING_BORDER_OFFSET = 1;
 	public static final int SIZE_OF_ROI = 8;
 
 	private Map<Feature,Double> featureVector;
-	private double[][] pixels;
+	private transient double[][] pixels;
 	private String imagePath;
 	private OrientationField orientationField;
 	private Pair<Integer,Integer> startROIBlock;
@@ -31,24 +35,37 @@ public class Fingerprint {
 		ImagePlus imagePlus = new ImagePlus(imagePath);
 		fingerprint.pixels = CommonUtils.transpose(CommonUtils.toDouble(imagePlus.getProcessor().getFloatArray()));
 
+		//pre-processing
 		OrientationField orientationField = new OrientationField(fingerprint.pixels);
 		fingerprint.orientationField = orientationField;
 		orientationField.calculate(PROCESSING_BLOCK_SIZE);
 		Pair<double[][],double[][]> smoothedField = orientationField.smoothField(SMOOTHING_BORDER_OFFSET);
 		Pair<Double,Double> corePoint = OrientationField.getCorePoint(smoothedField.getLeft());
 		fingerprint.startROIBlock = getStartROIBlock(corePoint).getLeft();
-		Map<Pair<Integer,Integer>,Double> roiFrequencies = calculateROIFrequencies(fingerprint.pixels,
-				mergeFields(orientationField.getOrientationField(), smoothedField.getLeft()), fingerprint.startROIBlock);
+		double[][] smoothedOrientationField = mergeFields(orientationField.getOrientationField(), smoothedField.getLeft());
+		Map<Pair<Integer,Integer>,Double> roiFrequencies = calculateROIFrequencies(fingerprint.pixels, smoothedOrientationField, fingerprint.startROIBlock);
+		double[][] filteredROI = getGaborFilteredROI(fingerprint.pixels, smoothedOrientationField, roiFrequencies, fingerprint.startROIBlock);
 
+		Wavelet wavelet = Wavelet.Haar;
+		Map<Subband,double[][]> transformedROI = wavelet.transform(filteredROI);
+		fillFeatureArray(fingerprint, transformedROI);
 
 		return fingerprint;
 	}
 
+	private static void fillFeatureArray(Fingerprint fingerprint, Map<Subband,double[][]> waveletTransformResult) {
 
-	//TODO: Implement
+		fingerprint.featureVector = new HashMap<>();
+		fingerprint.featureVector.put(Feature.LH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.LH))));
+		fingerprint.featureVector.put(Feature.HL_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HL))));
+		fingerprint.featureVector.put(Feature.HH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HH))));
+	}
+
 	private static double[][] getGaborFilteredROI(double[][] pixels, double[][] orientationField,
-												  Map<Pair<Integer,Integer>,Double> frequencies) {
+												  Map<Pair<Integer,Integer>,Double> frequencies, Pair<Integer,Integer> cornerBlock) {
 
+		int startBlockRow = cornerBlock.getLeft();
+		int startBlockColumn = cornerBlock.getRight();
 		double[][] filteredROI = new double[PROCESSING_BLOCK_SIZE*SIZE_OF_ROI][PROCESSING_BLOCK_SIZE*SIZE_OF_ROI];
 
 		SegmentedImage segmentedImage = new SegmentedImage(PROCESSING_BLOCK_SIZE, pixels);
@@ -63,12 +80,15 @@ public class Fingerprint {
 
 			for (int i = 0; i < PROCESSING_BLOCK_SIZE; i++) {
 				for (int j = 0; j < PROCESSING_BLOCK_SIZE; j++) {
-//					filteredROI[PROCESSING_BLOCK_SIZE*i][j] =
+
+					int roiRow = PROCESSING_BLOCK_SIZE*(blockRow - startBlockRow) + i;
+					int roiColumn = PROCESSING_BLOCK_SIZE*(blockColumn - startBlockColumn) + j;
+					filteredROI[roiRow][roiColumn] = filteredBlockPixels[i][j];
 				}
 			}
 		}
 
-		return null;
+		return filteredROI;
 	}
 
 	/**
@@ -151,5 +171,30 @@ public class Fingerprint {
 			}
 		}
 		return frequencies;
+	}
+
+	public double[] getFeatureValues() {
+		return Feature.getFeatureValues(featureVector);
+	}
+
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Fingerprint that = (Fingerprint) o;
+
+		if (!imagePath.equals(that.imagePath)) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return imagePath.hashCode();
 	}
 }

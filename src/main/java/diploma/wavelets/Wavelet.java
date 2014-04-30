@@ -3,9 +3,7 @@ package diploma.wavelets;
 import diploma.CommonUtils;
 import diploma.preprocessing.Convolution;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public enum Wavelet {
 
@@ -24,6 +22,10 @@ public enum Wavelet {
 					-0.00139535174699408, 0.00199240529499085, 0.000685856695004683, -0.000116466854994386, 
 					-9.35886700010899e-5, -1.32642030023549e-5}
 			);
+
+	public static enum Subband {
+		LL, HH, HL, LH
+	}
 
 	private double[] hiFilter, loFilter;
 
@@ -44,16 +46,30 @@ public enum Wavelet {
 		return decomposition;
 	}
 
-	public List<double[][]> transform(double[][] signal) {
+	/**
+	 * Returns results of wavelet transform for given 2D signal
+	 * @param signal    given signal
+	 * @return          List of transformation result:
+	 *                      1) LL block
+	 *                      2) LH block
+	 *                      3) HL block
+	 *                      4) HH block
+	 */
+	public Map<Subband,double[][]> transform(double[][] signal) {
 
 		if (signal.length % 2 != 0 || signal[0].length % 2 != 0) {
 			throw new IllegalArgumentException("Signal length must be even");
 		}
 
 		List<double[][]> transformedRows = rowsTransform(signal);
-		List<double[][]> twoDimTransformRes = new ArrayList<>(4);
-		twoDimTransformRes.addAll(columnsTransform(transformedRows.get(0)));
-		twoDimTransformRes.addAll(columnsTransform(transformedRows.get(1)));
+		Map<Subband,double[][]> twoDimTransformRes = new HashMap<>(4);
+		List<double[][]> LLAndLH = columnsTransform(transformedRows.get(0));
+		List<double[][]> HLAndHH = columnsTransform(transformedRows.get(1));
+		twoDimTransformRes.put(Subband.LL, LLAndLH.get(0));
+		twoDimTransformRes.put(Subband.LH, LLAndLH.get(1));
+		twoDimTransformRes.put(Subband.HL, HLAndHH.get(0));
+		twoDimTransformRes.put(Subband.HH, HLAndHH.get(1));
+
 		return twoDimTransformRes;
 	}
 

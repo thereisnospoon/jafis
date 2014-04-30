@@ -96,6 +96,18 @@ public class CommonUtils {
 		}
 	}
 
+	public static double[] toOneDim(double[][] a) {
+
+		double[] b = new double[a.length*a[0].length];
+		for (int i = 0; i < a.length; i++) {
+			for (int j = 0; j < a[0].length; j++) {
+
+				b[i*a[0].length + j] = a[i][j];
+			}
+		}
+		return b;
+	}
+
 	public static void showImage(double[][] pixels) {
 
 		ImagePlus image = new ImagePlus("image", new FloatProcessor(toFloat(pixels)));
