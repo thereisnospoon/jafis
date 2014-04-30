@@ -38,13 +38,27 @@ public class Fingerprint implements Serializable {
 		//pre-processing
 		OrientationField orientationField = new OrientationField(fingerprint.pixels);
 		fingerprint.orientationField = orientationField;
+
+		System.out.println("Orientation field calculation and smoothing");
+
 		orientationField.calculate(PROCESSING_BLOCK_SIZE);
 		Pair<double[][],double[][]> smoothedField = orientationField.smoothField(SMOOTHING_BORDER_OFFSET);
+
+		System.out.println("Core point detection");
+
 		Pair<Double,Double> corePoint = OrientationField.getCorePoint(smoothedField.getLeft());
 		fingerprint.startROIBlock = getStartROIBlock(corePoint).getLeft();
 		double[][] smoothedOrientationField = mergeFields(orientationField.getOrientationField(), smoothedField.getLeft());
+
+		System.out.println("Local frequency calculation");
+
 		Map<Pair<Integer,Integer>,Double> roiFrequencies = calculateROIFrequencies(fingerprint.pixels, smoothedOrientationField, fingerprint.startROIBlock);
+
+		System.out.println("Filtering");
+
 		double[][] filteredROI = getGaborFilteredROI(fingerprint.pixels, smoothedOrientationField, roiFrequencies, fingerprint.startROIBlock);
+
+		System.out.println("Wavelet transformation and feature extraction");
 
 		Wavelet wavelet = Wavelet.Haar;
 		Map<Subband,double[][]> transformedROI = wavelet.transform(filteredROI);
