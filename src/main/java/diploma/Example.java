@@ -34,10 +34,10 @@ public class Example {
 
 	public static void main(String[] args) {
 
-		Fingerprint fp1 = Fingerprint.extractFeatures("C:\\Users\\dmde0313\\Google Drive\\Diploma docs\\DB2_B\\103_6.tif");
-		Fingerprint fp2 = Fingerprint.extractFeatures("C:\\Users\\dmde0313\\Google Drive\\Diploma docs\\DB2_B\\102_7.tif");
-		Fingerprint fp3 = Fingerprint.extractFeatures("C:\\Users\\dmde0313\\Google Drive\\Diploma docs\\DB2_B\\102_1.tif");
-		Fingerprint fp = Fingerprint.extractFeatures("C:\\Users\\dmde0313\\Google Drive\\Diploma docs\\DB2_B\\103_2.tif");
+		Fingerprint fp1 = Fingerprint.extractFeatures("C:\\Users\\nagrizolich\\Desktop\\DB2_B\\103_6.tif");
+		Fingerprint fp2 = Fingerprint.extractFeatures("C:\\Users\\nagrizolich\\Desktop\\DB2_B\\102_7.tif");
+		Fingerprint fp3 = Fingerprint.extractFeatures("C:\\Users\\nagrizolich\\Desktop\\DB2_B\\102_1.tif");
+		Fingerprint fp = Fingerprint.extractFeatures("C:\\Users\\nagrizolich\\Desktop\\DB2_B\\103_2.tif");
 
 		System.out.println(Matcher.getNearestFingerprint(Arrays.asList(fp1, fp2, fp3), fp).getImagePath());
 	}
