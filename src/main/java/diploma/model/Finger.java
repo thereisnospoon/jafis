@@ -4,12 +4,12 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Person implements Serializable {
+public class Finger implements Serializable {
 
 	private Set<Fingerprint> fingerprints;
 	private String id;
 
-	public Person(String id) {
+	public Finger(String id) {
 
 		this.id = id;
 		fingerprints = new HashSet<>();
@@ -33,9 +33,9 @@ public class Person implements Serializable {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		Person person = (Person) o;
+		Finger finger = (Finger) o;
 
-		return id.equals(person.id);
+		return id.equals(finger.id);
 	}
 
 	@Override
