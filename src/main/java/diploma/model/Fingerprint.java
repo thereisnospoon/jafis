@@ -211,4 +211,11 @@ public class Fingerprint implements Serializable {
 	public int hashCode() {
 		return imagePath.hashCode();
 	}
+
+	@Override
+	public String toString() {
+
+		String[] split = imagePath.split("\\W");
+		return split[split.length - 2] + "." + split[split.length - 1];
+	}
 }

@@ -22,11 +22,6 @@ public class FingerprintsDatabase implements Serializable {
 
 	private List<Fingerprint> fingerprints;
 	private Map<Finger,List<Fingerprint>> fingerDb;
-	private String sourceImagesFolder;
-
-//	public FingerprintsDatabase(String sourceImagesFolder) {
-//		this.sourceImagesFolder = sourceImagesFolder;
-//	}
 
 	public FingerprintsDatabase() {
 
@@ -34,31 +29,49 @@ public class FingerprintsDatabase implements Serializable {
 		fingerDb = new HashMap<>();
 	}
 
-	public void extractFeatures() {
-
-		fingerprints = new ArrayList<>();
-
-		try {
-			File folder = new File(sourceImagesFolder);
-			File[] imageFiles = folder.listFiles();
-			for (File imageFile : imageFiles) {
-
-				Fingerprint fingerprint = Fingerprint.extractFeatures(imageFile.getName());
-				fingerprints.add(fingerprint);
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+//	public void extractFeatures() {
+//
+//		fingerprints = new ArrayList<>();
+//
+//		try {
+//			File folder = new File(sourceImagesFolder);
+//			File[] imageFiles = folder.listFiles();
+//			for (File imageFile : imageFiles) {
+//
+//				Fingerprint fingerprint = Fingerprint.extractFeatures(imageFile.getName());
+//				fingerprints.add(fingerprint);
+//			}
+//		} catch (Exception e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
 
 	public void addFinger(Finger finger) {
 		fingerDb.put(finger, new LinkedList<Fingerprint>());
 	}
 
-	public void addFingerprintToPerson(Finger finger, Fingerprint fingerprint) {
+	public void addFingerprintToFinger(Finger finger, Fingerprint fingerprint) {
 
 		fingerDb.get(finger).add(fingerprint);
 		fingerprints.add(fingerprint);
+	}
+
+	public void remove(Finger finger) {
+
+		for (Fingerprint fingerprint : fingerDb.get(finger)) {
+			fingerprints.remove(fingerprint);
+		}
+		fingerDb.remove(finger);
+	}
+
+	public void remove(Finger finger, Fingerprint fingerprint) {
+
+		fingerprints.remove(fingerprint);
+		fingerDb.get(finger).remove(fingerprint);
+	}
+
+	public List<Fingerprint> getFingerprints(Finger finger) {
+		return fingerDb.get(finger);
 	}
 
 	public List<Fingerprint> getFingerprints() {

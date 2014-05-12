@@ -7,19 +7,19 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 
 public class MainFrame extends JFrame {
 
 	private MainFrame mainFrame;
 
+	private String loadedImagePath;
+
 	private FingerprintPanel leftPanel, rightPanel;
 	private JButton matchButton, loadButton, removeFingerButton, removeImageButton;
-	private JComboBox<String> fingerBox, imageBox;
+	private JComboBox<Finger> fingerBox;
+	private JComboBox<Fingerprint> imageBox;
 	private JLabel loadedFileLabel;
 	private JMenuItem addFingerItem, addFPImage;
 
@@ -33,11 +33,12 @@ public class MainFrame extends JFrame {
 
 		mainFrame = this;
 		setTitle("JAFIS");
-		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		addElements();
 		addListeners();
 
-		fingerprintsDatabase = FingerprintsDatabase.loadExistent(null);
+		fingerprintsDatabase = FingerprintsDatabase.loadExistent("db");
+		updateFingerLists();
 	}
 
 	private void addListeners() {
@@ -54,6 +55,7 @@ public class MainFrame extends JFrame {
 					if (selectedFile != null) {
 						leftPanel.setImage(selectedFile.getAbsolutePath());
 						loadedFileLabel.setText(selectedFile.getName());
+						loadedImagePath = selectedFile.getAbsolutePath();
 					}
 				}
 			}
@@ -64,12 +66,94 @@ public class MainFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				String fingerId = (String) JOptionPane
+				String fingerId = JOptionPane
 						.showInputDialog(mainFrame, "Finger Id", "Add new finger", JOptionPane.QUESTION_MESSAGE);
 
 				if (!StringUtils.isEmpty(fingerId)) {
 					mainFrame.getFingerprintsDatabase().addFinger(new Finger(fingerId));
 					updateFingerLists();
+				}
+			}
+		});
+
+		addFPImage.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				if (fingerBox.getSelectedIndex() == -1) {
+
+					JOptionPane.showMessageDialog(mainFrame, "Finger should be selected", "Warning",
+							JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+
+					final File selectedFile = fileChooser.getSelectedFile();
+
+					if (selectedFile != null) {
+
+						rightPanel.setImage(selectedFile.getAbsolutePath());
+						Fingerprint fingerprint = Fingerprint.extractFeatures(selectedFile.getAbsolutePath());
+						mainFrame.getFingerprintsDatabase().addFingerprintToFinger((Finger) fingerBox.getSelectedItem(),
+								fingerprint);
+						updateImageList(fingerprint);
+					}
+				}
+			}
+		});
+
+		fingerBox.addItemListener(new ItemListener() {
+
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					updateImageList(null);
+				}
+				rightPanel.setImage(null);
+			}
+		});
+
+		imageBox.addItemListener(new ItemListener() {
+
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					rightPanel.setImage(((Fingerprint) e.getItem()).getImagePath());
+				}
+			}
+		});
+
+		removeFingerButton.addMouseListener(new MouseAdapter() {
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+
+				Finger finger = (Finger) fingerBox.getSelectedItem();
+				if (finger != null) {
+					fingerprintsDatabase.remove(finger);
+					fingerBox.setSelectedIndex(-1);
+					updateFingerLists();
+					updateImageList(null);
+				}
+			}
+		});
+
+		removeImageButton.addMouseListener(new MouseAdapter() {
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+
+				Fingerprint fingerprint = (Fingerprint) imageBox.getSelectedItem();
+				Finger finger = (Finger) fingerBox.getSelectedItem();
+				if (finger != null && fingerprint != null) {
+					fingerprintsDatabase.remove(finger, fingerprint);
+					updateImageList(null);
+					imageBox.setSelectedIndex(-1);
+					rightPanel.setImage(null);
 				}
 			}
 		});
@@ -155,11 +239,30 @@ public class MainFrame extends JFrame {
 		setResizable(false);
 	}
 
+	private void updateImageList(Fingerprint currentFingerprint) {
+
+		imageBox.removeAllItems();
+
+		if (fingerBox.getSelectedItem() != null) {
+			for (Fingerprint fingerprint : mainFrame.getFingerprintsDatabase()
+					.getFingerprints((Finger) fingerBox.getSelectedItem())) {
+
+				imageBox.addItem(fingerprint);
+			}
+		}
+
+		if (currentFingerprint != null) {
+			imageBox.setSelectedItem(currentFingerprint);
+		} else {
+			imageBox.setSelectedIndex(-1);
+		}
+	}
+
 	private void updateFingerLists() {
 
 		fingerBox.removeAllItems();
 		for (Finger finger : fingerprintsDatabase.getFingerDb().keySet()) {
-			fingerBox.addItem(finger.getId());
+			fingerBox.addItem(finger);
 		}
 		fingerBox.setSelectedIndex(-1);
 	}
@@ -180,5 +283,17 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
+	}
+
+	@Override
+	public void dispose() {
+
+		try {
+			fingerprintsDatabase.saveDB("db");
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		super.dispose();
 	}
 }

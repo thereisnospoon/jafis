@@ -3,11 +3,12 @@ package diploma.preprocessing;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.Serializable;
 import java.util.*;
 
 import static java.lang.Math.*;
 
-public class OrientationField {
+public class OrientationField implements Serializable {
 
 	/**
 	 * Calculates image gradients Gx and Gy using Sobel operator
