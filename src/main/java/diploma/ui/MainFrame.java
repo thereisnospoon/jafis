@@ -1,6 +1,7 @@
 package diploma.ui;
 
 import diploma.matching.FingerprintsDatabase;
+import diploma.matching.Matcher;
 import diploma.model.Finger;
 import diploma.model.Fingerprint;
 import org.apache.commons.lang3.StringUtils;
@@ -133,7 +134,11 @@ public class MainFrame extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 
 				Finger finger = (Finger) fingerBox.getSelectedItem();
-				if (finger != null) {
+				if (finger != null
+						&& JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(mainFrame,
+						"Do you really want to delete this finger?",
+						"Warning", JOptionPane.YES_NO_OPTION)) {
+
 					fingerprintsDatabase.remove(finger);
 					fingerBox.setSelectedIndex(-1);
 					updateFingerLists();
@@ -149,11 +154,36 @@ public class MainFrame extends JFrame {
 
 				Fingerprint fingerprint = (Fingerprint) imageBox.getSelectedItem();
 				Finger finger = (Finger) fingerBox.getSelectedItem();
-				if (finger != null && fingerprint != null) {
+				if (finger != null && fingerprint != null
+						&& JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(mainFrame,
+						"Do you really want to delete this fingerprint?",
+						"Warning", JOptionPane.YES_NO_OPTION)) {
+
 					fingerprintsDatabase.remove(finger, fingerprint);
 					updateImageList(null);
 					imageBox.setSelectedIndex(-1);
 					rightPanel.setImage(null);
+				}
+			}
+		});
+
+		matchButton.addMouseListener(new MouseAdapter() {
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+
+				if (loadedImagePath != null) {
+
+					Fingerprint newFingerprint = Fingerprint.extractFeatures(loadedImagePath);
+					Fingerprint matchedFingerprint = Matcher
+							.getNearestFingerprint(fingerprintsDatabase.getFingerprints(),
+							newFingerprint);
+
+					Finger finger = fingerprintsDatabase.getFinger(matchedFingerprint);
+					fingerBox.setSelectedItem(finger);
+					updateImageList(matchedFingerprint);
+				} else {
+					JOptionPane.showMessageDialog(mainFrame, "Please, load fingerprint image");
 				}
 			}
 		});

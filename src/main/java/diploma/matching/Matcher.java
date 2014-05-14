@@ -28,7 +28,7 @@ public class Matcher {
 
 	public static Fingerprint getNearestFingerprint(List<Fingerprint> fpBase, Fingerprint fingerprint) {
 
-		Map<Fingerprint,Double> distances = getDistances(fpBase, fingerprint, CANBERRA_DISTANCE);
+		Map<Fingerprint,Double> distances = getDistances(fpBase, fingerprint, EUCLIDEAN_DISTANCE);
 
 		Fingerprint nearest = null;
 		double minDistance = Double.POSITIVE_INFINITY;

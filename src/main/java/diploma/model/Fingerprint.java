@@ -87,7 +87,8 @@ public class Fingerprint implements Serializable {
 
 			int blockRow = block.getLeft();
 			int blockColumn = block.getRight();
-			GaborFilter gaborFilter = new GaborFilter(frequencies.get(block), orientationField[blockRow][blockColumn], 0, 0.5, 2);
+			GaborFilter gaborFilter = new GaborFilter(frequencies.get(block), orientationField[blockRow][blockColumn]
+					+ Math.PI/2, 0, 0.5, 2);
 
 			double[][] filteredBlockPixels = Convolution.convolve(segmentedImage.getSegment(blockRow,blockColumn).getPixels(),
 					gaborFilter.getKernel());
@@ -98,6 +99,8 @@ public class Fingerprint implements Serializable {
 					int roiRow = PROCESSING_BLOCK_SIZE*(blockRow - startBlockRow) + i;
 					int roiColumn = PROCESSING_BLOCK_SIZE*(blockColumn - startBlockColumn) + j;
 					filteredROI[roiRow][roiColumn] = filteredBlockPixels[i][j];
+					// without filtering
+//					filteredROI[roiRow][roiColumn] = segmentedImage.getSegment(blockRow,blockColumn).getPixels()[i][j];
 				}
 			}
 		}

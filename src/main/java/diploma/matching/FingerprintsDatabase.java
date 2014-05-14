@@ -82,6 +82,17 @@ public class FingerprintsDatabase implements Serializable {
 		return fingerDb;
 	}
 
+	public Finger getFinger(Fingerprint fingerprint) {
+
+		for (Map.Entry<Finger,List<Fingerprint>> entry : fingerDb.entrySet()) {
+
+			if (entry.getValue().contains(fingerprint)) {
+				return entry.getKey();
+			}
+		}
+		return null;
+	}
+
 	public void saveDB(String path) throws Exception {
 
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(path)));
