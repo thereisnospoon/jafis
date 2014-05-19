@@ -44,4 +44,10 @@ public class FingerprintPanel extends JPanel {
 
 		repaint();
 	}
+
+	public void setImage(ImageIcon image) {
+
+		this.image = image.getImage();
+		repaint();
+	}
 }

@@ -9,9 +9,14 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
 
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Fingerprint implements Serializable {
 
@@ -21,19 +26,23 @@ public class Fingerprint implements Serializable {
 
 	private Map<Feature,Double> featureVector;
 	private transient double[][] pixels;
-	private String imagePath;
+	private ImageIcon image;
 	private OrientationField orientationField;
 	private Pair<Integer,Integer> startROIBlock;
+
+	private int id;
+	private String imageName;
 
 	private Fingerprint() {}
 
 	public static Fingerprint extractFeatures(String imagePath) {
 
 		Fingerprint fingerprint = new Fingerprint();
-		fingerprint.imagePath = imagePath;
+		fingerprint.setName(imagePath);
 
 		ImagePlus imagePlus = new ImagePlus(imagePath);
 		fingerprint.pixels = CommonUtils.transpose(CommonUtils.toDouble(imagePlus.getProcessor().getFloatArray()));
+		fingerprint.image = new ImageIcon(imagePlus.getBufferedImage());
 
 		//pre-processing
 		OrientationField orientationField = new OrientationField(fingerprint.pixels);
@@ -73,6 +82,7 @@ public class Fingerprint implements Serializable {
 		fingerprint.featureVector.put(Feature.LH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.LH))));
 		fingerprint.featureVector.put(Feature.HL_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HL))));
 		fingerprint.featureVector.put(Feature.HH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HH))));
+		fingerprint.featureVector.put(Feature.FP_Id, Double.valueOf(fingerprint.id + ""));
 	}
 
 	private static double[][] getGaborFilteredROI(double[][] pixels, double[][] orientationField,
@@ -131,6 +141,29 @@ public class Fingerprint implements Serializable {
 			}
 		}
 		return mergedField;
+	}
+
+	private void setName(String imagePath) {
+
+		Matcher matcher = Pattern.compile("\\d+").matcher(new StringBuilder(imagePath).reverse().toString());
+		int i = 0;
+		String possibleId = null;
+		while (matcher.find()) {
+			String matchedString = matcher.group();
+			i++;
+
+			if (i == 2) {
+				possibleId = new StringBuilder(matchedString).reverse().toString();
+				break;
+			}
+		}
+		if (possibleId != null) {
+			id = Integer.parseInt(possibleId);
+		} else {
+			id = 0;
+		}
+		File file = new File(imagePath);
+		imageName = file.getName();
 	}
 
 	/**
@@ -194,31 +227,12 @@ public class Fingerprint implements Serializable {
 		return Feature.getFeatureValues(featureVector);
 	}
 
-	public String getImagePath() {
-		return imagePath;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		Fingerprint that = (Fingerprint) o;
-
-		if (!imagePath.equals(that.imagePath)) return false;
-
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		return imagePath.hashCode();
+	public ImageIcon getImage() {
+		return image;
 	}
 
 	@Override
 	public String toString() {
-
-		String[] split = imagePath.split("\\W");
-		return split[split.length - 2] + "." + split[split.length - 1];
+		return imageName;
 	}
 }

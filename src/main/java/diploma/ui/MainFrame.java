@@ -113,7 +113,8 @@ public class MainFrame extends JFrame {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					updateImageList(null);
 				}
-				rightPanel.setImage(null);
+				String nullPath = null;
+				rightPanel.setImage(nullPath);
 			}
 		});
 
@@ -123,7 +124,7 @@ public class MainFrame extends JFrame {
 			public void itemStateChanged(ItemEvent e) {
 
 				if (e.getStateChange() == ItemEvent.SELECTED) {
-					rightPanel.setImage(((Fingerprint) e.getItem()).getImagePath());
+					rightPanel.setImage(((Fingerprint) e.getItem()).getImage());
 				}
 			}
 		});
@@ -162,7 +163,8 @@ public class MainFrame extends JFrame {
 					fingerprintsDatabase.remove(finger, fingerprint);
 					updateImageList(null);
 					imageBox.setSelectedIndex(-1);
-					rightPanel.setImage(null);
+					String nullPath = null;
+					rightPanel.setImage(nullPath);
 				}
 			}
 		});
