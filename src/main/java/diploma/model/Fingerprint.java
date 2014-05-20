@@ -10,7 +10,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -29,6 +28,10 @@ public class Fingerprint implements Serializable {
 	private ImageIcon image;
 	private OrientationField orientationField;
 	private Pair<Integer,Integer> startROIBlock;
+
+	public int getId() {
+		return id;
+	}
 
 	private int id;
 	private String imageName;

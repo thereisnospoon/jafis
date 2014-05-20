@@ -29,23 +29,6 @@ public class FingerprintsDatabase implements Serializable {
 		fingerDb = new HashMap<>();
 	}
 
-//	public void extractFeatures() {
-//
-//		fingerprints = new ArrayList<>();
-//
-//		try {
-//			File folder = new File(sourceImagesFolder);
-//			File[] imageFiles = folder.listFiles();
-//			for (File imageFile : imageFiles) {
-//
-//				Fingerprint fingerprint = Fingerprint.extractFeatures(imageFile.getName());
-//				fingerprints.add(fingerprint);
-//			}
-//		} catch (Exception e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
-
 	public void addFinger(Finger finger) {
 		fingerDb.put(finger, new LinkedList<Fingerprint>());
 	}

@@ -17,7 +17,7 @@ public class Matcher {
 	public static final EuclideanDistance EUCLIDEAN_DISTANCE = new EuclideanDistance();
 	public static final CanberraDistance CANBERRA_DISTANCE = new CanberraDistance();
 
-	public static Map<Fingerprint,Double> getDistances(List<Fingerprint> fpBase, Fingerprint fingerprint, DistanceMeasure distanceMeasure) {
+	private static Map<Fingerprint,Double> getDistances(List<Fingerprint> fpBase, Fingerprint fingerprint, DistanceMeasure distanceMeasure) {
 
 		Map<Fingerprint,Double> distances = new HashMap<>();
 		for (Fingerprint fpFromBase : fpBase) {
@@ -26,19 +26,24 @@ public class Matcher {
 		return distances;
 	}
 
-	public static Fingerprint getNearestFingerprint(List<Fingerprint> fpBase, Fingerprint fingerprint) {
+	public static Fingerprint match(FingerprintsDatabase fpBase, Fingerprint fingerprint, double threshold) {
 
-		Map<Fingerprint,Double> distances = getDistances(fpBase, fingerprint, EUCLIDEAN_DISTANCE);
+		Map<Fingerprint,Double> distances = getDistances(fpBase.getFingerprints(), fingerprint, EUCLIDEAN_DISTANCE);
 
 		Fingerprint nearest = null;
 		double minDistance = Double.POSITIVE_INFINITY;
-		for (Fingerprint fpFromBase : fpBase) {
+		for (Fingerprint fpFromBase : fpBase.getFingerprints()) {
 
 			if (distances.get(fpFromBase) < minDistance) {
 				minDistance = distances.get(fpFromBase);
 				nearest = fpFromBase;
 			}
 		}
-		return nearest;
+
+		if (minDistance > threshold) {
+			return null;
+		} else {
+			return nearest;
+		}
 	}
 }

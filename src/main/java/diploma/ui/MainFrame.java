@@ -13,6 +13,8 @@ import java.io.File;
 
 public class MainFrame extends JFrame {
 
+	public static final double THRESHOLD = 1;
+
 	private MainFrame mainFrame;
 
 	private String loadedImagePath;
@@ -177,13 +179,17 @@ public class MainFrame extends JFrame {
 				if (loadedImagePath != null) {
 
 					Fingerprint newFingerprint = Fingerprint.extractFeatures(loadedImagePath);
-					Fingerprint matchedFingerprint = Matcher
-							.getNearestFingerprint(fingerprintsDatabase.getFingerprints(),
-							newFingerprint);
+					Fingerprint matchedFingerprint = Matcher.match(fingerprintsDatabase, newFingerprint, THRESHOLD);
 
-					Finger finger = fingerprintsDatabase.getFinger(matchedFingerprint);
-					fingerBox.setSelectedItem(finger);
-					updateImageList(matchedFingerprint);
+					if (matchedFingerprint != null) {
+
+						Finger finger = fingerprintsDatabase.getFinger(matchedFingerprint);
+						fingerBox.setSelectedItem(finger);
+						updateImageList(matchedFingerprint);
+						JOptionPane.showMessageDialog(mainFrame, "Identified");
+					} else {
+						JOptionPane.showMessageDialog(mainFrame,"Couldn't identify given fingerprint");
+					}
 				} else {
 					JOptionPane.showMessageDialog(mainFrame, "Please, load fingerprint image");
 				}
