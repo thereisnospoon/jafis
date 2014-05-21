@@ -10,6 +10,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -85,7 +87,7 @@ public class Fingerprint implements Serializable {
 		fingerprint.featureVector.put(Feature.LH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.LH))));
 		fingerprint.featureVector.put(Feature.HL_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HL))));
 		fingerprint.featureVector.put(Feature.HH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HH))));
-		fingerprint.featureVector.put(Feature.FP_Id, Double.valueOf(fingerprint.id + ""));
+		fingerprint.featureVector.put(Feature.FP_Id, (double) new Color(((BufferedImage) fingerprint.getImage().getImage()).getRGB(0, 0)).getBlue());
 	}
 
 	private static double[][] getGaborFilteredROI(double[][] pixels, double[][] orientationField,

@@ -1,11 +1,10 @@
 package diploma.ui;
 
-import org.apache.commons.imaging.Imaging;
+import ij.ImagePlus;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
-import java.io.File;
 
 public class FingerprintPanel extends JPanel {
 
@@ -34,7 +33,7 @@ public class FingerprintPanel extends JPanel {
 
 		if (imagePath != null) {
 			try {
-				image = Imaging.getBufferedImage(new File(imagePath));
+				image = new ImagePlus(imagePath).getBufferedImage();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
