@@ -31,6 +31,6 @@ public class ImageMarker {
 
 	public static void main(String[] args) throws Exception {
 
-		markImages("C:\\Users\\dmde0313\\Desktop\\DB2_B (1)");
+		markImages("C:\\Users\\nagrizolich\\Desktop\\DB1");
 	}
 }

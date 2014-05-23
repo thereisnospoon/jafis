@@ -66,7 +66,8 @@ public class Tester {
 
 	public static void main(String[] args) throws Exception {
 
-		FingerprintsDatabase db = formDB("C:\\Users\\nagrizolich\\Desktop\\training");
+		FingerprintsDatabase db = formDB("C:\\Users\\nagrizolich\\Desktop\\trainingSample");
+		db.saveDB("db");
 //		List<Fingerprint> fingerprints = extractFeatures("C:\\Users\\nagrizolich\\Desktop\\test");
 //
 //		double threshold = 1;
