@@ -77,7 +77,7 @@ public class Fingerprint implements Serializable {
 		Wavelet wavelet = Wavelet.Haar;
 		Map<Subband,double[][]> transformedROI = wavelet.transform(filteredROI);
 		fillFeatureArray(fingerprint, transformedROI);
-		fingerprint.featureVector.put(Feature.MEAN, (double) new Color(((BufferedImage) fingerprint.getImage().getImage()).getRGB(0, 0)).getBlue());
+		fingerprint.featureVector.put(Feature.LL_Variance, (double) new Color(((BufferedImage) fingerprint.getImage().getImage()).getRGB(0, 0)).getBlue());
 
 		return fingerprint;
 	}
@@ -226,6 +226,10 @@ public class Fingerprint implements Serializable {
 			}
 		}
 		return frequencies;
+	}
+
+	public Map<Feature, Double> getFeatureVector() {
+		return featureVector;
 	}
 
 	public double[] getFeatureValues() {

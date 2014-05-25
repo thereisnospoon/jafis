@@ -2,9 +2,9 @@ package diploma;
 
 import diploma.matching.FingerprintsDatabase;
 import diploma.matching.Matcher;
+import diploma.model.Feature;
 import diploma.model.Finger;
 import diploma.model.Fingerprint;
-import diploma.ui.MainFrame;
 
 import java.io.File;
 import java.util.*;
@@ -45,12 +45,21 @@ public class Tester {
 		return fingerprints;
 	}
 
+	private static void normalize(List<Fingerprint> fingerprints) {
+
+		for (Fingerprint fingerprint : fingerprints) {
+			double value = fingerprint.getFeatureVector().get(Feature.LL_Variance)/30;
+			fingerprint.getFeatureVector().put(Feature.LL_Variance, value);
+		}
+	}
+
 	private static String performTest(FingerprintsDatabase fingerprintsDatabase, List<Fingerprint> testSample,
 									double threshold) {
 
 		int matched = 0, unmatched = 0, wrongMatched = 0;
 		for (Fingerprint fingerprint : testSample) {
 
+//			System.out.println(Arrays.toString(fingerprint.getFeatureValues()));
 			Fingerprint matchedFingerprint = Matcher.match(fingerprintsDatabase, fingerprint, threshold);
 
 			if (matchedFingerprint == null) {
@@ -66,14 +75,19 @@ public class Tester {
 
 	public static void main(String[] args) throws Exception {
 
-		FingerprintsDatabase db = formDB("C:\\Users\\nagrizolich\\Desktop\\trainingSample");
-		db.saveDB("db");
-//		List<Fingerprint> fingerprints = extractFeatures("C:\\Users\\nagrizolich\\Desktop\\test");
-//
-//		double threshold = 1;
-//		for (int i = 0; i < 9; i++) {
-//			System.out.println(performTest(db, fingerprints, threshold));
-//			threshold -= 0.2;
-//		}
+//		formDB("C:\\Users\\nagrizolich\\Desktop\\trainingSample").saveDB("db3train");
+//		formDB("C:\\Users\\nagrizolich\\Desktop\\testSample").saveDB("db3test");
+
+		FingerprintsDatabase trainDB = FingerprintsDatabase.loadExistent("db3train");
+		FingerprintsDatabase testDB = FingerprintsDatabase.loadExistent("db3test");
+
+		normalize(trainDB.getFingerprints());
+		normalize(testDB.getFingerprints());
+
+		double t = 0.01;
+		while (t <= 0.2) {
+			System.out.println(performTest(trainDB, testDB.getFingerprints(), t));
+			t += 0.01;
+		}
 	}
 }
