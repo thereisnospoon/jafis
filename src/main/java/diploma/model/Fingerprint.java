@@ -2,6 +2,7 @@ package diploma.model;
 
 import diploma.CommonUtils;
 import diploma.preprocessing.*;
+import diploma.ui.FingerprintPanel;
 import diploma.wavelets.Wavelet;
 import diploma.wavelets.Wavelet.Subband;
 import ij.ImagePlus;
@@ -47,7 +48,7 @@ public class Fingerprint implements Serializable {
 
 		ImagePlus imagePlus = new ImagePlus(imagePath);
 		fingerprint.pixels = CommonUtils.transpose(CommonUtils.toDouble(imagePlus.getProcessor().getFloatArray()));
-		fingerprint.image = new ImageIcon(imagePlus.getBufferedImage());
+		fingerprint.image = new ImageIcon(CommonUtils.resize(imagePlus, FingerprintPanel.IMG_WIDTH, FingerprintPanel.IMG_HEIGHT).getBufferedImage());
 
 		//pre-processing
 		OrientationField orientationField = new OrientationField(fingerprint.pixels);
@@ -64,6 +65,7 @@ public class Fingerprint implements Serializable {
 		fingerprint.startROIBlock = getStartROIBlock(corePoint).getLeft();
 		double[][] smoothedOrientationField = mergeFields(orientationField.getOrientationField(), smoothedField.getLeft());
 
+		System.out.println(smoothedOrientationField);
 		System.out.println("Local frequency calculation");
 
 		Map<Pair<Integer,Integer>,Double> roiFrequencies = calculateROIFrequencies(fingerprint.pixels, smoothedOrientationField, fingerprint.startROIBlock);
@@ -78,6 +80,8 @@ public class Fingerprint implements Serializable {
 		Map<Subband,double[][]> transformedROI = wavelet.transform(filteredROI);
 		fillFeatureArray(fingerprint, transformedROI);
 		fingerprint.featureVector.put(Feature.LL_Variance, (double) new Color(((BufferedImage) fingerprint.getImage().getImage()).getRGB(0, 0)).getBlue());
+
+		System.out.println(orientationField.toString(roiFrequencies.keySet(), SIZE_OF_ROI));
 
 		return fingerprint;
 	}

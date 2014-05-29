@@ -162,7 +162,6 @@ public class FrequencyFiled {
 
 	private static double getMaxPeakDistance(List<Pair<Double,Integer>> peaks) {
 		if (peaks.size() < 2) {
-			System.out.println("Not enough peaks");
 			return 10;
 		}
 

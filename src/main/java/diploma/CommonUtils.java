@@ -1,13 +1,25 @@
 package diploma;
 
+import diploma.model.Fingerprint;
+import diploma.ui.FingerprintPanel;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Set;
 
 public class CommonUtils {
+
+	public static ImagePlus resize(ImagePlus imagePlus, int width, int heigth) {
+
+		ImageProcessor imageProcessor = imagePlus.getProcessor().resize(width,heigth);
+		return new ImagePlus("new", imageProcessor);
+	}
 
 	public static float[][] toFloat(double[][] a) {
 
@@ -128,5 +140,43 @@ public class CommonUtils {
 	public static double[] toArray(List<Double> list) {
 
 		return ArrayUtils.toPrimitive(list.toArray(new Double[0]));
+	}
+
+	public static Pair<Integer,Integer> getROIStart(Set<Pair<Integer,Integer>> roi) {
+
+		int minRow = 0, minColumn = 0;
+		for (Pair<Integer,Integer> cell: roi) {
+			if (cell.getLeft() < minRow) {
+				minRow = cell.getLeft();
+			}
+			if (cell.getRight() < minColumn) {
+				minColumn = cell.getRight();
+			}
+		}
+		return new ImmutablePair<>(minRow,minColumn);
+	}
+
+	public static String toString(double[][] a) {
+
+		StringBuilder sb = new StringBuilder();
+		for (double[] row : a) {
+
+			for (double value: row) {
+				sb.append(String.format("%3.2f ", value));
+			}
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+	public static double[][] subArray(double[][] a, int startRow, int startColumn, int size) {
+
+		double[][] b = new double[size][size];
+		for (int i = startRow; i < startRow + size; i++) {
+			for (int j = startColumn; j < startColumn + size; j++) {
+				b[i - startRow][j - startColumn] = a[i][j];
+			}
+		}
+		return b;
 	}
 }

@@ -1,5 +1,6 @@
 package diploma.preprocessing;
 
+import diploma.CommonUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -262,5 +263,20 @@ public class OrientationField implements Serializable {
 
 	public double[][] getCoherences() {
 		return coherences;
+	}
+
+	@Override
+	public String toString() {
+
+		return CommonUtils.toString(orientationField);
+	}
+
+	public String toString(Set<Pair<Integer,Integer>> roi, int roiWidth) {
+
+		Pair<Integer,Integer> roiStart = CommonUtils.getROIStart(roi);
+		int startRow = roiStart.getLeft();
+		int startColumn = roiStart.getRight();
+		double[][] roiOrientation = CommonUtils.subArray(orientationField, startRow, startColumn, roiWidth);
+		return CommonUtils.toString(roiOrientation);
 	}
 }
