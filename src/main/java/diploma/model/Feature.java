@@ -4,7 +4,7 @@ import java.util.Map;
 
 public enum Feature {
 
-	LL_Variance, HH_Variance, HL_Variance, LH_Variance;
+	Mean, HH_Variance, HL_Variance, LH_Variance;
 
 	public static double[] getFeatureValues(Map<Feature,Double> features) {
 

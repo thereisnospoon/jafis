@@ -98,7 +98,14 @@ public class MainFrame extends JFrame {
 					if (selectedFile != null) {
 
 						rightPanel.setImage(selectedFile.getAbsolutePath());
-						Fingerprint fingerprint = Fingerprint.extractFeatures(selectedFile.getAbsolutePath());
+
+						Fingerprint fingerprint;
+						try {
+							fingerprint = Fingerprint.extractFeatures(selectedFile.getAbsolutePath());
+						} catch (IllegalStateException ex) {
+							JOptionPane.showMessageDialog(mainFrame, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+							return;
+						}
 						mainFrame.getFingerprintsDatabase().addFingerprintToFinger((Finger) fingerBox.getSelectedItem(),
 								fingerprint);
 						updateImageList(fingerprint);

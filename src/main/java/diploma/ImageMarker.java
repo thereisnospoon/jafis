@@ -23,7 +23,10 @@ public class ImageMarker {
 				int number = Integer.parseInt(matcher.group());
 
 				ByteProcessor byteProcessor = (ByteProcessor) imagePlus.getProcessor();
-				byteProcessor.set(0,0,number);
+
+				for (int i = 0; i < byteProcessor.getWidth(); i++) {
+					byteProcessor.set(i, 0, number);
+				}
 				new FileSaver(imagePlus).saveAsTiff();
 			}
 		}
@@ -31,6 +34,6 @@ public class ImageMarker {
 
 	public static void main(String[] args) throws Exception {
 
-		markImages("C:\\Users\\nagrizolich\\Desktop\\DB1");
+		markImages("C:\\Users\\nagrizolich\\Desktop\\DB2_B");
 	}
 }

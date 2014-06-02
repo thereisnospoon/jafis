@@ -8,13 +8,11 @@ import diploma.wavelets.Wavelet.Subband;
 import ij.ImagePlus;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.stat.descriptive.moment.Variance;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -39,7 +37,9 @@ public class Fingerprint implements Serializable {
 	private int id;
 	private String imageName;
 
-	private Fingerprint() {}
+	private Fingerprint() {
+		featureVector = new HashMap<>();
+	}
 
 	public static Fingerprint extractFeatures(String imagePath) {
 
@@ -62,10 +62,9 @@ public class Fingerprint implements Serializable {
 		System.out.println("Core point detection");
 
 		Pair<Double,Double> corePoint = OrientationField.getCorePoint(smoothedField.getLeft());
-		fingerprint.startROIBlock = getStartROIBlock(corePoint).getLeft();
+		fingerprint.startROIBlock = getStartROIBlock(corePoint, fingerprint).getLeft();
 		double[][] smoothedOrientationField = mergeFields(orientationField.getOrientationField(), smoothedField.getLeft());
 
-		System.out.println(smoothedOrientationField);
 		System.out.println("Local frequency calculation");
 
 		Map<Pair<Integer,Integer>,Double> roiFrequencies = calculateROIFrequencies(fingerprint.pixels, smoothedOrientationField, fingerprint.startROIBlock);
@@ -79,19 +78,16 @@ public class Fingerprint implements Serializable {
 		Wavelet wavelet = Wavelet.Haar;
 		Map<Subband,double[][]> transformedROI = wavelet.transform(filteredROI);
 		fillFeatureArray(fingerprint, transformedROI);
-		fingerprint.featureVector.put(Feature.LL_Variance, (double) new Color(((BufferedImage) fingerprint.getImage().getImage()).getRGB(0, 0)).getBlue());
-
-		System.out.println(orientationField.toString(roiFrequencies.keySet(), SIZE_OF_ROI));
 
 		return fingerprint;
 	}
 
 	private static void fillFeatureArray(Fingerprint fingerprint, Map<Subband,double[][]> waveletTransformResult) {
 
-		fingerprint.featureVector = new HashMap<>();
-		fingerprint.featureVector.put(Feature.LH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.LH))));
-		fingerprint.featureVector.put(Feature.HL_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HL))));
-		fingerprint.featureVector.put(Feature.HH_Variance, new Variance().evaluate(CommonUtils.toOneDim(waveletTransformResult.get(Subband.HH))));
+		fingerprint.featureVector.put(Feature.Mean, CommonUtils.mean(fingerprint.pixels));
+		fingerprint.featureVector.put(Feature.LH_Variance, CommonUtils.variance(waveletTransformResult.get(Subband.LH)));
+		fingerprint.featureVector.put(Feature.HL_Variance, CommonUtils.variance(waveletTransformResult.get(Subband.HL)));
+		fingerprint.featureVector.put(Feature.HH_Variance, CommonUtils.variance(waveletTransformResult.get(Subband.HH)));
 	}
 
 	private static double[][] getGaborFilteredROI(double[][] pixels, double[][] orientationField,
@@ -118,8 +114,6 @@ public class Fingerprint implements Serializable {
 					int roiRow = PROCESSING_BLOCK_SIZE*(blockRow - startBlockRow) + i;
 					int roiColumn = PROCESSING_BLOCK_SIZE*(blockColumn - startBlockColumn) + j;
 					filteredROI[roiRow][roiColumn] = filteredBlockPixels[i][j];
-					// without filtering
-//					filteredROI[roiRow][roiColumn] = segmentedImage.getSegment(blockRow,blockColumn).getPixels()[i][j];
 				}
 			}
 		}
@@ -180,7 +174,8 @@ public class Fingerprint implements Serializable {
 	 * @param corePoint	estimated core point which was calculated from some smoothed orientation field (in blocks)
 	 * @return	coordinates of left upper border block of ROI (first pair) and actual estimated core point (in pixels)
 	 */
-	private static Pair<ImmutablePair<Integer,Integer>,ImmutablePair<Integer,Integer>> getStartROIBlock(Pair<Double,Double> corePoint) {
+	private static Pair<ImmutablePair<Integer,Integer>,ImmutablePair<Integer,Integer>> getStartROIBlock(
+			Pair<Double,Double> corePoint, Fingerprint fingerprint) {
 
 		int row = SMOOTHING_BORDER_OFFSET + (int) corePoint.getLeft().doubleValue();
 		int column = SMOOTHING_BORDER_OFFSET + (int) corePoint.getRight().doubleValue();
@@ -191,8 +186,11 @@ public class Fingerprint implements Serializable {
 		int corePointRow = (startRowOfROI + SIZE_OF_ROI/2)*PROCESSING_BLOCK_SIZE;
 		int corePointColumn = (startColumnOfROI + SIZE_OF_ROI/2)*PROCESSING_BLOCK_SIZE;
 
-		if (startRowOfROI < 0 || startColumnOfROI < 0) {
-			throw new IllegalStateException("Cannot crop sufficient area as ROI");
+		if (startRowOfROI < 0 || startColumnOfROI < 0 ||
+				startRowOfROI + SIZE_OF_ROI - 1 >= fingerprint.orientationField.getOrientationField().length ||
+				startColumnOfROI + SIZE_OF_ROI - 1 >= fingerprint.orientationField.getOrientationField()[0].length) {
+
+			throw new IllegalStateException("Invalid input image. Cannot crop sufficient area around core point");
 		}
 
 		return new ImmutablePair<>(new ImmutablePair<>(startRowOfROI,startColumnOfROI),
@@ -242,6 +240,12 @@ public class Fingerprint implements Serializable {
 
 	public ImageIcon getImage() {
 		return image;
+	}
+
+	public double[][] getROIOrientations() {
+
+		return CommonUtils.subArray(orientationField.getOrientationField(), startROIBlock.getLeft(), startROIBlock.getRight(),
+				SIZE_OF_ROI);
 	}
 
 	@Override

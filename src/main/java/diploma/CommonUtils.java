@@ -1,7 +1,5 @@
 package diploma;
 
-import diploma.model.Fingerprint;
-import diploma.ui.FingerprintPanel;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -92,6 +90,17 @@ public class CommonUtils {
 		return b;
 	}
 
+	public static double mean(double[][] a) {
+
+		double res = 0;
+		for (int i = 0; i < a.length; i++) {
+			for (int j = 0; j < a[0].length; j++) {
+				res += a[0][j];
+			}
+		}
+		return res/a.length/a[0].length;
+	}
+
 	public static double[] columnToArray(double[][] x, int i) {
 
 		double[] y = new double[x.length];
@@ -118,6 +127,25 @@ public class CommonUtils {
 			}
 		}
 		return b;
+	}
+
+	public static double variance(double[][] a) {
+
+		double m = 0;
+		for (int i = 0; i < a.length; i++) {
+			for (int j = 0; j < a[0].length; j++) {
+				m += a[i][j];
+			}
+		}
+		m /= a[0].length*a.length;
+
+		double res = 0;
+		for (int i = 0; i < a.length; i++) {
+			for (int j = 0; j < a[0].length; j++) {
+				res += Math.pow(m - a[i][j], 2);
+			}
+		}
+		return res/a[0].length/a.length;
 	}
 
 	public static void showImage(double[][] pixels) {
